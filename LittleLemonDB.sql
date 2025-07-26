@@ -163,6 +163,50 @@ ENGINE = InnoDB;
 
 CREATE INDEX `OrderDeliveryId_idx` ON `LittleLemonDB`.`OrderDeliveryStatus` (`OrderId` ASC) VISIBLE;
 
+CREATE VIEW `ordersview` AS 
+select 
+`orders`.`OrderId` AS `OrderID`,
+`orders`.`Quantity` AS `Quantity`,
+`orders`.`TotalCost` AS `TotalCost` 
+from `orders` 
+where (`orders`.`Quantity` > 2);
+
+CREATE VIEW `task2_ordersover150` AS 
+select 
+`customerdetails`.`CustomerId` AS `CustomerID`,
+concat(`customerdetails`.`FirstName`,' ',`customerdetails`.`LastName`) AS `Full Name`,
+`orders`.`OrderId` AS `OrderId`,
+`orders`.`TotalCost` AS `Cost`,
+`menu`.`MenuName` AS `MenuName`,
+`menuitems`.`CourseName` AS `CourseName`,
+`menuitems`.`StarterName` AS `StarterName` 
+from `orders` 
+left join `customerdetails` on `orders`.`CustomerId` = `customerdetails`.`CustomerId` 
+left join `menu` on `orders`.`MenuId` = `menu`.`MenuId` 
+left join `menuitems` on `menu`.`MenuItemsId` = `menuitems`.`MenuItemsId` 
+where `orders`.`TotalCost` > 150 
+order by `orders`.`TotalCost`;
+
+CREATE VIEW `task3_menusover2` AS 
+SELECT `menu`.`MenuName` AS `MenuName` 
+FROM `menu` 
+WHERE `menu`.`MenuId` = ANY (select `orders`.`MenuId` from `orders` where `orders`.`Quantity` > 2);
+
+DELIMITER ;;
+CREATE PROCEDURE `GetMaxQuantity`()
+BEGIN
+SELECT MAX(Quantity) AS 'Max Quantity in Order' FROM Orders;
+END ;;
+DELIMITER ;
+
+DELIMITER ;;
+CREATE PROCEDURE `CancelOrder`(order_id INT)
+BEGIN
+DELETE FROM Orders WHERE OrderId = order_id;
+SELECT CONCAT('Order ', order_id, ' is cancelled') AS 'Confirmation';
+END ;;
+DELIMITER ;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
