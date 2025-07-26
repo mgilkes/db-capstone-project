@@ -152,16 +152,16 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`OrderDeliveryStatus` (
   `StatusId` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `DeliveryDate` DATE NOT NULL,
   `Status` VARCHAR(45) NOT NULL,
-  `OderId` INT UNSIGNED NOT NULL,
+  `OrderId` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`StatusId`),
   CONSTRAINT `OrderDeliveryId`
-    FOREIGN KEY (`OderId`)
+    FOREIGN KEY (`OrderId`)
     REFERENCES `LittleLemonDB`.`Orders` (`OrderId`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX `OrderDeliveryId_idx` ON `LittleLemonDB`.`OrderDeliveryStatus` (`OderId` ASC) VISIBLE;
+CREATE INDEX `OrderDeliveryId_idx` ON `LittleLemonDB`.`OrderDeliveryStatus` (`OrderId` ASC) VISIBLE;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
