@@ -199,6 +199,8 @@ SELECT MAX(Quantity) AS 'Max Quantity in Order' FROM Orders;
 END ;;
 DELIMITER ;
 
+PREPARE GetOrderDetail FROM 'SELECT OrderId, Quantity, TotalCost AS Cost FROM Orders WHERE CustomerId = ?';
+
 DELIMITER ;;
 CREATE PROCEDURE `CancelOrder`(order_id INT)
 BEGIN
@@ -206,6 +208,83 @@ DELETE FROM Orders WHERE OrderId = order_id;
 SELECT CONCAT('Order ', order_id, ' is cancelled') AS 'Confirmation';
 END ;;
 DELIMITER ;
+
+ALTER TABLE `LittleLemonDB`.`Bookings` 
+DROP FOREIGN KEY `StaffId`;
+ALTER TABLE `LittleLemonDB`.`Bookings` 
+DROP COLUMN `StaffId`,
+DROP INDEX `StaffId_idx` ;
+;
+
+INSERT INTO LittleLemonDB.Bookings (BookingId, BookingDate, TableNumber, CustomerId)
+VALUES 
+(1, '2022-10-10', 5, 1),
+(2, '2022-10-12', 3, 3),
+(3, '2022-10-11', 2, 2),
+(4, '2022-10-13', 2, 1);
+
+DELIMITER ;;
+CREATE PROCEDURE LittleLemonDB.`CheckBooking`(booking_date DATE, table_number INT)
+BEGIN
+SELECT 
+CASE 
+WHEN COUNT(BookingId) > 0 THEN CONCAT('Table ', table_number, ' is already booked')
+ELSE CONCAT('Table ', table_number, ' is available')
+END AS `Booking status` 
+FROM Bookings 
+WHERE BookingDate = booking_date AND TableNumber = table_number;
+END ;;
+DELIMITER ;
+
+
+DELIMITER ;;
+CREATE PROCEDURE LittleLemonDB.`AddValidBooking`(booking_date DATE, table_number INT, customer_id INT)
+BEGIN
+DECLARE booking_id INT;
+START TRANSACTION;
+INSERT INTO Bookings (BookingDate, TableNumber, CustomerId) 
+VALUES (booking_date, table_number, customer_id);
+IF (SELECT COUNT(BookingId) FROM Bookings WHERE BookingDate = booking_date AND TableNumber = table_number) > 1 THEN
+ROLLBACK;
+SELECT CONCAT('Table ', table_number, ' is already booked - booking cancelled') AS `Booking status`;
+ELSE 
+COMMIT;
+SELECT CONCAT('Table ', table_number, ' is booked successfully') AS `Booking status`;
+END IF;
+END;;
+DELIMITER ;
+
+
+DELIMITER ;;
+CREATE PROCEDURE LittleLemonDB.`AddBooking`(booking_id INT, customer_id INT, booking_date DATE, table_number INT)
+BEGIN
+INSERT INTO Bookings (BookingId, BookingDate, TableNumber, CustomerId) 
+VALUES (booking_id, booking_date, table_number, customer_id);
+SELECT 'New booking added' AS `Confirmation`;
+END;;
+DELIMITER ;
+
+
+DELIMITER ;;
+CREATE PROCEDURE LittleLemonDB.`UpdateBooking`(booking_id INT, booking_date DATE)
+BEGIN
+UPDATE Bookings 
+SET BookingDate = booking_date 
+WHERE BookingId = booking_id;
+SELECT CONCAT('Booking ', booking_id, ' updated') AS `Confirmation`;
+END;;
+DELIMITER ;
+
+
+DELIMITER ;;
+CREATE PROCEDURE LittleLemonDB.`CancelBooking`(booking_id INT)
+BEGIN
+DELETE FROM Bookings 
+WHERE BookingId = booking_id;
+SELECT CONCAT('Booking ', booking_id, ' cancelled') AS `Confirmation`;
+END;;
+DELIMITER ;
+
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
